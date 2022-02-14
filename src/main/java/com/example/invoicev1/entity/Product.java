@@ -4,6 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -48,7 +49,7 @@ public class Product {
     private Order order;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.EAGER)
-    Set<InvoiceProduct> invoiceProducts;
+    Set<InvoiceProduct> invoiceProducts = new HashSet<>();
 
     public Product(Long id, String description, double price, int VAT, double discount, int qty) {
         this.description = description;

@@ -28,93 +28,86 @@ public class InvoiceService {
 
     public void saveInvoices(Order order) {
         List<Product> orderedProducts = order.getOrderProducts();
-        Map<Product, Integer> tempProducts = new HashMap<>();
-        Map<Product, Integer> deletedProducts = new HashMap<>();
         List<Invoice> invoices = new ArrayList<>();
-        generateInvoices(orderedProducts, tempProducts, deletedProducts, invoices);
+        generateInvoices(orderedProducts, invoices);
     }
 
-    public void generateInvoices(List<Product> orderedProducts, Map<Product, Integer> tempProducts, Map<Product, Integer> deletedProducts, List<Invoice> invoices) {
-        for (Product product : orderedProducts) {
-            if (product.getPrice().compareTo(BigDecimal.valueOf(500)) > 0) {
-                Invoice invoice = new Invoice();
-                if (product.getQtyAvailable() > 1) {
-                    InvoiceProduct invoiceProduct = new InvoiceProduct(null, invoice, product, 1);
-                    invoice.setInvoiceProducts(Set.of(invoiceProduct));
-                    product.setInvoiceProducts(Set.of(invoiceProduct));
-                    product.setQtyAvailable(product.getQtyAvailable() - 1);
-
-                    productRepository.save(product);
-                    invoiceRepository.save(invoice);
-                    invoiceProductRepository.save(invoiceProduct);
-                }
-                if (product.getQtyAvailable() == 1) {
-                    InvoiceProduct invoiceProduct = new InvoiceProduct(null, invoice, product, 1);
-                    invoice.setInvoiceProducts(Set.of(invoiceProduct));
-                    product.setInvoiceProducts(Set.of(invoiceProduct));
-                    product.setQtyAvailable(0);
-
-                    invoiceRepository.save(invoice);
-                    invoiceProductRepository.save(invoiceProduct);
-                    orderedProducts.remove(product);
-                }
-            }
-            if (tempProducts.isEmpty()) {
-                if (product.getQtyAvailable() > 50 && product.checkProductQtyTotalOverValue(500, 50)) {
-                    tempProducts.put(product, 50);
-                    deletedProducts.put(product, 50);
-                    product.setQtyAvailable(product.getQtyAvailable() - 50);
-                    productRepository.save(product);
-                }
-                if (product.getQtyAvailable() <= 50 && product.getQtyAvailable() > 0 && product.checkProductQtyTotalOverValue(500, product.getQtyAvailable())) {
-                    tempProducts.put(product, product.getQtyAvailable());
-                    deletedProducts.put(product, product.getQtyAvailable());
-                    product.setQtyAvailable(0);
-                    productRepository.save(product);
-                }
-            }
-            if (!tempProducts.isEmpty() && !tempProducts.containsKey(product) && checkTotalTempProductsOverValue(tempProducts, 400)) {
-                if (product.getQtyAvailable() > 50 && product.checkProductQtyTotalOverValue(100, 50)) {
-                    tempProducts.put(product, 50);
-                    deletedProducts.put(product, 50);
-                    product.setQtyAvailable(product.getQtyAvailable() - 50);
-                    productRepository.save(product);
-                }
-                if (product.getQtyAvailable() <= 50 && product.getQtyAvailable() > 0 && product.checkProductQtyTotalOverValue(100, product.getQtyAvailable())) {
-                    tempProducts.put(product, product.getQtyAvailable());
-                    deletedProducts.put(product, product.getQtyAvailable());
-                    product.setQtyAvailable(0);
-                    productRepository.save(product);
-                }
-            }
-           if (!checkTotalTempProductsOverValue(tempProducts, 400)){
-                Invoice invoice = new Invoice();
-                for (Map.Entry<Product, Integer> entry : tempProducts.entrySet()) {
-                    InvoiceProduct invoiceProduct = new InvoiceProduct(null, invoice, entry.getKey(), entry.getValue());
-                    invoice.getInvoiceProducts().add(invoiceProduct);
-                    entry.getKey().getInvoiceProducts().add(invoiceProduct);
-
-                    productRepository.save(product);
-                    invoiceRepository.save(invoice);
-                    invoiceProductRepository.save(invoiceProduct);
-                }
-                tempProducts.clear();
-                orderedProducts.removeIf(p -> p.getQtyAvailable() == 0);
-            }
-        }
-        while (!orderedProducts.isEmpty()) {
-            generateInvoices(orderedProducts, tempProducts, deletedProducts, invoices);
-        }
-    }
-
-    public boolean checkTotalTempProductsOverValue(Map<Product, Integer> products, int value) {
+    public void generateInvoices(List<Product> orderedProducts, List<Invoice> invoices) {
+        Map<Product, Integer> tempProducts = new HashMap<>();
+        List<Product> deletedProducts = new ArrayList<>();
+        BigDecimal tempAmount = BigDecimal.ZERO;
         BigDecimal total = BigDecimal.ZERO;
-        for (Map.Entry<Product, Integer> entry : products.entrySet()) {
-            BigDecimal[] totalsForOneProduct = entry.getKey().calculateProductTotal();
-            BigDecimal totalForProductQty = totalsForOneProduct[2].multiply(BigDecimal.valueOf(entry.getValue()));
-            total = total.add(totalForProductQty);
+        for (Product product : orderedProducts) {
+            total = calculatedPrice(product,product.getQtyAvailable()).get("total");
+            if (product.getPrice().compareTo(BigDecimal.valueOf(500)) > 0 && tempProducts.isEmpty()) {
+                Invoice invoice = new Invoice();
+                invoiceRepository.save(invoice);
+                InvoiceProduct invoiceProduct = new InvoiceProduct(null, invoice, product, 1);
+                invoice.setInvoiceProducts(Set.of(invoiceProduct));
+                product.setInvoiceProducts(Set.of(invoiceProduct));
+                invoice.setTotal(product.calculateProductTotal()[2]);
+                productRepository.save(product);
+                invoiceRepository.save(invoice);
+                invoiceProductRepository.save(invoiceProduct);
+//                tempProducts.put(product, 1);
+//                tempAmount = tempAmount.add(calculatedPrice(product, 1).get("total"));
+                if (product.getQtyAvailable() > 1) {
+                    product.setQtyAvailable(product.getQtyAvailable() - 1);
+                    productRepository.save(product);
+                } else {
+                    product.setQtyAvailable(0);
+                    productRepository.save(product);
+                    deletedProducts.add(product);
+                }
+            } else if (tempAmount.compareTo(BigDecimal.valueOf(500)) < 0) {
+                if (product.getQtyAvailable() <= 50 && product.checkProductQtyTotalOverValue(500, product.getQtyAvailable())) {
+                    tempProducts.put(product, product.getQtyAvailable());
+                    tempAmount = tempAmount.add(calculatedPrice(product, product.getQtyAvailable()).get("total"));
+                    product.setQtyAvailable(0);
+                    deletedProducts.add(product);
+                    productRepository.save(product);
+                }else if (product.checkProductQtyTotalOverValue(500,1)){
+//                if (product.getQtyAvailable() <= 50 && product.getQtyAvailable() > 0 && product.checkProductQtyTotalOverValue(500, product.getQtyAvailable())) {
+                    tempProducts.put(product, 50);
+                    tempAmount = tempAmount.add(calculatedPrice(product, 50).get("total"));
+                    product.setQtyAvailable(product.getQtyAvailable() - 50);
+                    productRepository.save(product);
+                }
+            }
         }
-        return !(total.compareTo(BigDecimal.valueOf(value)) > 0);
+        orderedProducts.removeAll(deletedProducts);
+        Invoice invoice = new Invoice();
+        invoice.setTotal(tempAmount);
+        invoiceRepository.save(invoice);
+        for (Map.Entry<Product, Integer> entry : tempProducts.entrySet()) {
+            InvoiceProduct invoiceProduct = new InvoiceProduct(null, invoice, entry.getKey(), entry.getValue());
+            invoice.getInvoiceProducts().add(invoiceProduct);
+            invoiceRepository.save(invoice);
+            entry.getKey().getInvoiceProducts().add(invoiceProduct);
+            productRepository.save(entry.getKey());
+            invoiceProductRepository.save(invoiceProduct);
+        }
+        invoices.add(invoice);
+        tempProducts.clear();
+        if (!orderedProducts.isEmpty()) {
+            generateInvoices(orderedProducts, invoices);
+        }
+    }
+
+    public Map<String, BigDecimal> calculatedPrice(Product product, int qty) {
+        BigDecimal subtotal, total, VATtotal;
+        if (!(product.getDiscount().equals(BigDecimal.valueOf(0)))) {
+            subtotal = product.getPrice().subtract(product.getDiscount());
+        } else {
+            subtotal = product.getPrice();
+        }
+        VATtotal = subtotal.multiply((BigDecimal.valueOf(product.getVAT())).multiply(BigDecimal.valueOf(0.01)));
+        total = subtotal.add(VATtotal);
+        BigDecimal subtotalQty = subtotal.multiply(BigDecimal.valueOf(qty));
+        BigDecimal VATtotalQty = VATtotal.multiply(BigDecimal.valueOf(qty));
+        BigDecimal totalQty = total.multiply(BigDecimal.valueOf(qty));
+
+        return Map.of("subtotal", subtotalQty, "VATtotal", VATtotalQty, "total", totalQty);
     }
 
     public Invoice updateInvoice(Invoice invoice) {
@@ -122,5 +115,6 @@ public class InvoiceService {
         existingInvoice.setSubtotal(invoice.getSubtotal());
         return invoiceRepository.save(existingInvoice);
     }
+
 }
 

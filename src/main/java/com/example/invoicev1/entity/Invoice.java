@@ -7,7 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -36,7 +36,7 @@ public class Invoice {
     private Order order;
 
     @OneToMany(mappedBy = "invoice")
-    Set<InvoiceProduct> invoiceProducts;
+    Set<InvoiceProduct> invoiceProducts = new HashSet<>();
 
     public Invoice(Long id, BigDecimal subtotal, BigDecimal vattotal, BigDecimal total) {
         this.subtotal = subtotal;
