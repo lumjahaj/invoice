@@ -24,8 +24,8 @@ public class InvoiceV1Application {
     @Bean
     CommandLineRunner run(OrderRepository orderRepository, InvoiceService invoiceService) {
         return args -> {
-            Optional<Order> order = orderRepository.findById(1L);
-            invoiceService.saveInvoices(order.get());
+//            Optional<Order> order = orderRepository.findById(1L);
+//            invoiceService.saveInvoices(order.get());
         };
     }
 

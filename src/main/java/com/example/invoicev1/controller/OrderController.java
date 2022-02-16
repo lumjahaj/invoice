@@ -2,6 +2,7 @@ package com.example.invoicev1.controller;
 
 
 import com.example.invoicev1.dto.CreateOrdertDTO;
+import com.example.invoicev1.dto.ViewOrderDTO;
 import com.example.invoicev1.entity.Order;
 import com.example.invoicev1.repository.OrderRepository;
 import com.example.invoicev1.service.InvoiceService;
@@ -17,14 +18,10 @@ import java.util.Optional;
 public class OrderController {
 
     private final OrderService orderService;
-    private final InvoiceService invoiceService;
-    private final OrderRepository orderRepository;
 
     @Autowired
-    public OrderController(OrderService orderService, InvoiceService invoiceService, OrderRepository orderRepository) {
+    public OrderController(OrderService orderService) {
         this.orderService = orderService;
-        this.invoiceService = invoiceService;
-        this.orderRepository = orderRepository;
     }
 
     @PostMapping(path = "/addOrder")
@@ -34,8 +31,7 @@ public class OrderController {
     }
 
     @GetMapping(path = "/getOrder/{id}")
-    public Order getOrderById(@PathVariable Long id){
-        Optional<Order> order = orderRepository.findById(id);
-        return order.get();
+    public ViewOrderDTO getOrderById(@PathVariable Long id){
+        return orderService.getOrderById(id);
     }
 }

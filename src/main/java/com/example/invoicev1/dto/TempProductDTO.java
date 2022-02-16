@@ -1,5 +1,6 @@
 package com.example.invoicev1.dto;
 
+import com.example.invoicev1.entity.Product;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -9,14 +10,10 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class ViewProductDTO {
-    private Long id;
-    private String description;
-    private BigDecimal price;
-    private Integer VAT;
-    private BigDecimal discount;
+public class TempProductDTO {
+    private Product product;
     private Integer qty;
+    private BigDecimal total;
     private BigDecimal subtotal;
     private BigDecimal VATtotal;
-    private BigDecimal total;
 }

@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @AllArgsConstructor
@@ -29,5 +30,14 @@ public class InvoiceProduct {
 
     @Column(name = "qty", nullable = false)
     int qty;
+
+    @Column(name = "subtotal", columnDefinition = "DECIMAL(19,5)", nullable = false)
+    BigDecimal subtotal;
+
+    @Column(name = "vat_total", columnDefinition = "DECIMAL(19,5)", nullable = false)
+    BigDecimal VATtotal;
+
+    @Column(name = "total", columnDefinition = "DECIMAL(19,5)", nullable = false)
+    BigDecimal total;
 
 }

@@ -1,7 +1,8 @@
 package com.example.invoicev1.service;
 
-import com.example.invoicev1.dto.CreateOrdertDTO;
-import com.example.invoicev1.dto.CreateProductDTO;
+import com.example.invoicev1.dto.*;
+import com.example.invoicev1.entity.Invoice;
+import com.example.invoicev1.entity.InvoiceProduct;
 import com.example.invoicev1.entity.Order;
 import com.example.invoicev1.entity.Product;
 import com.example.invoicev1.repository.OrderRepository;
@@ -70,4 +71,43 @@ public class OrderService {
         return orderRepository.findById(order.getId());
     }
 
+    public ViewOrderDTO getOrderById(Long id) {
+        Optional<Order> optionalOrder = orderRepository.findById(id);
+        if (optionalOrder.isEmpty()) {
+            throw new IllegalStateException("order with this id does not exist!");
+        }
+        Order order = optionalOrder.get();
+        ViewOrderDTO orderDTO = new ViewOrderDTO();
+        orderDTO.setId(order.getId());
+        orderDTO.setSubtotal(order.getSubtotal());
+        orderDTO.setVATtotal(order.getVATtotal());
+        orderDTO.setTotal(order.getTotal());
+        List<ViewInvoiceDTO> invoiceDTOS = new ArrayList<>();
+        for (Invoice invoice: order.getOrderInvoices()) {
+            ViewInvoiceDTO invoiceDTO = new ViewInvoiceDTO();
+            invoiceDTO.setId(invoice.getId());
+            invoiceDTO.setSubtotal(invoice.getSubtotal());
+            invoiceDTO.setVATtotal(invoice.getVATtotal());
+            invoiceDTO.setTotal(invoice.getTotal());
+            List<ViewProductDTO> productDTOS = new ArrayList<>();
+            for (InvoiceProduct invoiceProduct: invoice.getInvoiceProducts()) {
+                Product product = invoiceProduct.getProduct();
+                ViewProductDTO viewProductDTO = new ViewProductDTO();
+                viewProductDTO.setId(product.getId());
+                viewProductDTO.setDescription(product.getDescription());
+                viewProductDTO.setQty(invoiceProduct.getQty());
+                viewProductDTO.setPrice(product.getPrice());
+                viewProductDTO.setDiscount(product.getDiscount());
+                viewProductDTO.setVAT(product.getVAT());
+                viewProductDTO.setVATtotal(invoiceProduct.getVATtotal());
+                viewProductDTO.setSubtotal(invoiceProduct.getSubtotal());
+                viewProductDTO.setTotal(invoiceProduct.getTotal());
+                productDTOS.add(viewProductDTO);
+            }
+            invoiceDTO.setProducts(productDTOS);
+            invoiceDTOS.add(invoiceDTO);
+        }
+        orderDTO.setInvoices(invoiceDTOS);
+        return orderDTO;
+    }
 }
