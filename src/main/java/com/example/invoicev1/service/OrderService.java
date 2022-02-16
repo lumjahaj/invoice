@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -29,7 +30,7 @@ public class OrderService {
         this.invoiceService = invoiceService;
     }
 
-    public void saveOrder(CreateOrdertDTO createOrderDTO) {
+    public Optional<Order> saveOrder(CreateOrdertDTO createOrderDTO) {
         Order order = new Order();
         List<CreateProductDTO> productsDTO = createOrderDTO.getProducts();
         List<Product> products = new ArrayList<>();
@@ -66,7 +67,7 @@ public class OrderService {
         order.setTotal(orderSubtotal.add(orderVATtotal));
         orderRepository.save(order);
         productRepository.saveAll(products);
-//        invoiceService.saveInvoices(order);
+        return orderRepository.findById(order.getId());
     }
 
 }
