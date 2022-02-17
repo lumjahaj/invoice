@@ -20,7 +20,7 @@ public class InvoiceController {
         this.invoiceService = invoiceService;
     }
 
-    @PutMapping(path = "/generateInvoices/{id}")
+    @PostMapping(path = "/generateInvoices/{id}")
     public List<ViewInvoiceDTO> generateInvoicesByOrderId(@PathVariable Long id) {
         return invoiceService.saveInvoicesByOrderId(id);
     }

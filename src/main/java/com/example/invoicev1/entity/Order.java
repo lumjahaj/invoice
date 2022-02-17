@@ -30,7 +30,7 @@ public class Order {
     @Column(name = "total", columnDefinition = "DECIMAL(19,5)")
     private BigDecimal total;
 
-    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order")
     private List<Invoice> orderInvoices;
 
     @OneToMany(mappedBy = "order", fetch = FetchType.EAGER)

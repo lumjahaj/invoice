@@ -21,14 +21,12 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
-    private final InvoiceService invoiceService;
 
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, ProductRepository productRepository, InvoiceService invoiceService) {
+    public OrderService(OrderRepository orderRepository, ProductRepository productRepository) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
-        this.invoiceService = invoiceService;
     }
 
     public Optional<Order> saveOrder(CreateOrdertDTO createOrderDTO) {

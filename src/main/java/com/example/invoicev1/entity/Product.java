@@ -48,7 +48,7 @@ public class Product {
     @JoinColumn(name = "order_id", referencedColumnName = "order_id")
     private Order order;
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "product")
     Set<InvoiceProduct> invoiceProducts = new HashSet<>();
 
     public Product(Long id, String description, double price, int VAT, double discount, int qty) {

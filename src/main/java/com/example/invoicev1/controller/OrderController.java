@@ -26,8 +26,11 @@ public class OrderController {
 
     @PostMapping(path = "/addOrder")
     public Order addOrder(@RequestBody CreateOrdertDTO createOrdertDTO) {
-        Optional<Order> order = orderService.saveOrder(createOrdertDTO);
-        return order.get();
+        Optional<Order> optionalOrder = orderService.saveOrder(createOrdertDTO);
+        if (optionalOrder.isEmpty()) {
+            throw new IllegalStateException("order with this id does not exist!");
+        }
+        return optionalOrder.get();
     }
 
     @GetMapping(path = "/getOrder/{id}")

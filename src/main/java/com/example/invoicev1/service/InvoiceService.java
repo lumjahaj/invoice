@@ -81,7 +81,8 @@ public class InvoiceService {
             invoiceDTO.setVATtotal(invoice.getVATtotal());
             invoiceDTO.setTotal(invoice.getTotal());
             List<ViewProductDTO> productDTOS = new ArrayList<>();
-            for (InvoiceProduct invoiceProduct: invoice.getInvoiceProducts()) {
+            Set<InvoiceProduct> invoiceProducts = invoiceProductRepository.findInvoiceProductsByInvoice(invoice);
+            for (InvoiceProduct invoiceProduct: invoiceProducts) {
                 Product product = invoiceProduct.getProduct();
                 ViewProductDTO viewProductDTO = new ViewProductDTO();
                 viewProductDTO.setId(product.getId());
@@ -117,11 +118,12 @@ public class InvoiceService {
                 VATtotal = product.calculateProductTotal()[1];
                 total = product.calculateProductTotal()[2];
                 InvoiceProduct invoiceProduct = new InvoiceProduct(null, invoice, product, 1, subtotal, VATtotal, total);
-                invoice.setInvoiceProducts(Set.of(invoiceProduct));
-                product.setInvoiceProducts(Set.of(invoiceProduct));
+                invoice.getInvoiceProducts().add(invoiceProduct);
+                product.getInvoiceProducts().add(invoiceProduct);
                 invoice.setTotal(total);
                 invoice.setSubtotal(subtotal);
                 invoice.setVATtotal(VATtotal);
+                invoices.add(invoice);
                 productRepository.save(product);
                 invoiceRepository.save(invoice);
                 invoiceProductRepository.save(invoiceProduct);
